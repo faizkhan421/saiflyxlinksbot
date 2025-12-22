@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AdSense Readiness Checker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial; background:#f4f6f8; padding:20px }
+    input, button { width:100%; padding:12px; margin:8px 0 }
+    .box { background:#fff; padding:20px; border-radius:6px }
+    .bad { color:red }
+    .good { color:green }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h2>AdSense Site Checker (Unofficial)</h2>
+  <input id="url" placeholder="Enter website URL">
+  <button onclick="checkSite()">Check Site</button>
+  <div id="result"></div>
+</div>
+
+<script>
+const riskyWords = [
+  "casino","betting","porn","xxx","hack",
+  "crack","mod apk","loan without"
+];
+
+async function checkSite() {
+  const url = document.getElementById("url").value;
+  const result = document.getElementById("result");
+  result.innerHTML = "Checking...";
+
+  try {
+    const proxy = "https://api.allorigins.win/raw?url=";
+    const res = await fetch(proxy + encodeURIComponent(url));
+    const html = await res.text();
+
+    let text = html.toLowerCase();
+    let issues = [];
+
+    // risky words
+    let found = riskyWords.filter(w => text.includes(w));
+    if (found.length) {
+      issues.push("❌ Risky words found: " + found.join(", "));
+    }
+
+    // required pages
+    if (!text.includes("privacy")) issues.push("❌ Privacy Policy missing");
+    if (!text.includes("about")) issues.push("❌ About page missing");
+    if (!text.includes("contact")) issues.push("❌ Contact page missing");
+
+    if (issues.length === 0) {
+      result.innerHTML = "<p class='good'>✅ No major AdSense red flags found</p>";
+    } else {
+      result.innerHTML = issues.map(i => `<p class='bad'>${i}</p>`).join("");
+    }
+
+  } catch {
+    result.innerHTML = "<p class='bad'>Error fetching site</p>";
+  }
+}
+</script>
+
+</body>
+</html>
